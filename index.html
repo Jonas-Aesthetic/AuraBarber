@@ -276,20 +276,37 @@
   }
   .nav-cta:hover{ background:var(--ink); color:var(--cream) !important; border-color:var(--ink); }
   
+  /* Botão Hambúrguer Mobile com Animação CSS */
   .nav-toggle{ 
     display:none; 
     background:none; 
     border:1px solid var(--line-gold); 
     border-radius:3px; 
-    color:var(--ink); 
-    font-size:1.2rem; 
     cursor:pointer; 
-    width: 42px;
-    height: 42px;
-    line-height:1; 
-    align-items:center;
-    justify-content:center;
+    width: 44px;
+    height: 44px;
+    padding: 10px 8px;
     z-index: 101;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+  }
+  .nav-toggle .bar {
+    width: 100%;
+    height: 2px;
+    background-color: var(--ink);
+    border-radius: 2px;
+    transition: all 0.3s ease-in-out;
+  }
+  /* Animação para ícone de fechar (X) */
+  .nav-toggle.active .bar:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+  }
+  .nav-toggle.active .bar:nth-child(2) {
+    opacity: 0;
+  }
+  .nav-toggle.active .bar:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
   }
 
   /* ===================== HERO ===================== */
@@ -591,31 +608,56 @@
     .section-head-row{ flex-direction:column; }
   }
 
+  /* ===================== REORGANIZAÇÃO DO MENU MOBILE ===================== */
   @media (max-width: 768px){
     .wrap{ padding:0 18px; }
     .nav-toggle{ display:flex; }
     
+    /* Off-canvas menu lateral (Drawer) */
     .nav-links{
       position:fixed; 
-      top:0; left:0; right:0; bottom:0;
-      background:rgba(247,242,231,0.98);
+      top:0; 
+      right:-100%; /* Inicialmente fora da tela */
+      bottom:0;
+      width: 100%;
+      max-width: 320px; /* Evita ficar demasiadamente largo em tablets na vertical */
+      height: 100vh;
+      height: 100dvh; /* Garante ajuste às barras dinâmicas do Safari/Chrome no mobile */
+      background: rgba(247, 242, 231, 0.98);
       -webkit-backdrop-filter: blur(15px);
       backdrop-filter: blur(15px);
-      flex-direction:column; 
-      justify-content:center;
-      align-items: center;
-      padding: 80px 24px 40px; 
-      gap:20px;
-      transform:translateX(100%); 
-      transition:transform .35s cubic-bezier(0.16, 1, 0.3, 1);
-      overflow-y:auto; 
-      z-index:99;
+      flex-direction: column; 
+      justify-content: flex-start;
+      align-items: flex-start;
+      padding: 90px 24px 40px; 
+      gap: 16px;
+      transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto; 
+      z-index: 99;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
+      box-shadow: -5px 0 25px rgba(24, 19, 14, 0.15);
     }
-    .nav-links.open{ transform:translateX(0); }
-    .nav-links a:not(.nav-cta){ font-size:1.15rem; color:var(--ink); font-weight: 500; }
-    .nav-links .nav-cta{ width: 100%; max-width: 280px; margin-top: 10px; }
+
+    .nav-links.open{ 
+      right: 0; /* Desliza até a borda */
+    }
+
+    .nav-links a:not(.nav-cta){ 
+      font-size: 1.05rem; 
+      color: var(--ink); 
+      font-weight: 500; 
+      width: 100%;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(24, 19, 14, 0.05);
+    }
+
+    .nav-links .nav-cta{ 
+      width: 100%; 
+      max-width: 100%; 
+      margin-top: 12px; 
+      text-align: center;
+    }
 
     section{ padding:56px 0; }
     .hero{ padding-top:100px; padding-bottom:44px; }
@@ -667,7 +709,11 @@
       <a href="#local">Localização</a>
       <a href="https://wa.me/5511980969535?text=Ol%C3%A1!%20Gostaria%20de%20verificar%20os%20hor%C3%A1rios%20dispon%C3%ADveis%20para%20esta%20semana%20na%20Aura%20Studio." class="nav-cta" target="_blank" rel="noopener" data-track="whatsapp_nav">Reserva Concierge</a>
     </nav>
-    <button class="nav-toggle" id="nav-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav-links">☰</button>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav-links">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
   </div>
 </header>
 
@@ -1097,15 +1143,26 @@
   const toggleMenu = (open) => {
     const isOpen = open !== undefined ? open : !navLinks.classList.contains('open');
     navLinks.classList.toggle('open', isOpen);
+    navToggle.classList.toggle('active', isOpen);
     document.body.classList.toggle('menu-open', isOpen);
     navToggle.setAttribute('aria-expanded', isOpen);
-    navToggle.textContent = isOpen ? '✕' : '☰';
   };
 
-  navToggle.addEventListener('click', () => toggleMenu());
+  navToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleMenu();
+  });
 
   navLinks.querySelectorAll('a').forEach(a => {
     a.addEventListener('click', () => toggleMenu(false));
+  });
+
+  // Fecha o menu ao clicar fora dele
+  document.addEventListener('click', (event) => {
+    const isClickInside = navLinks.contains(event.target) || navToggle.contains(event.target);
+    if (!isClickInside && navLinks.classList.contains('open')) {
+      toggleMenu(false);
+    }
   });
 
   // INTERSECTION OBSERVER PARA ANIMAÇÃO REVEAL
